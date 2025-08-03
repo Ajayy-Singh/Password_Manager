@@ -1,129 +1,114 @@
-function maskPass(password) {
-    let str ="";
-    for (let index = 0; index < password.length; index++) {
-        str += "*";
-    }
-    return str;
-}
+document.addEventListener('DOMContentLoaded', () => {
+    const passwordForm = document.getElementById('password-form');
+    const passwordTableBody = document.getElementById('password-table-body');
+    const noDataMessage = document.getElementById('no-data-message');
+    
+    const generateBtn = document.getElementById('generate-btn');
+    const copyGeneratedBtn = document.getElementById('copy-generated-btn');
+    const generatedPasswordField = document.getElementById('generated-password');
+    const passwordLengthSlider = document.getElementById('password-length');
+    const lengthValueSpan = document.getElementById('length-value');
 
-// copy text 
-function copyText(txt) {
-    navigator.clipboard.writeText(txt).then(
-        () => {
-
-            /* clipboard successfully set */
-            // alert("Copied the text: " + txt);
-            document.getElementById("alert").style.display= "inline";
-            setTimeout(()=>{
-                    document.getElementById("alert").style.display= "none"
-            },1500)
-        },
-        () => {
-            /* clipboard write failed */
-            alert("Clipboard copying failed")
-        },
-    );
-}
-const deletePasswords = (website) => {
-    let data = localStorage.getItem("passwords");
-    let arr = JSON.parse(data);
-    arrUpdated = arr.filter((e) => {
-        return e.website != website
-    })
-    localStorage.setItem("passwords", JSON.stringify(arrUpdated));
-    // alert(`Succesfully Deleted ${website} Password`)
-    document.getElementById("delete").style.display= "inline";
-            setTimeout(()=>{
-                    document.getElementById("delete").style.display= "none"
-            },1500)
-    showPasswords();
-}
-
-// table filling
-const showPasswords = () => {
-    let tb = document.querySelector("table");
-    let data = localStorage.getItem("passwords");
-    if (data == null) {
-        tb.innerHTML = "No data to show";
-    }
-    else {
-        tb.innerHTML = `<tr>
-        <th>Website</th>
-        <th>Username</th>
-        <th>Password</th>
-        <th>delete</th>
-        </tr>`
-        let arr = JSON.parse(data);
-        let str = "";
-        for (let index = 0; index < arr.length; index++) {
-            const element = arr[index];
-
-
-            str += `<tbody><tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                        ${element.website} <img src="copy.svg" alt="Copy Button" style="display: inline;" width="10px" height="10px" onclick="copyText('${element.website}')" style="cursor: pointer;"
-                    </th>
-                    <td class="px-6 py-4">
-                        ${element.username} <img src="copy.svg" alt="Copy Button" style="display: inline;" width="10px" height="10px" onclick="copyText('${element.username}')" style="cursor: pointer;"
-                    </td>
-                    <td class="px-6 py-4">
-                        ${maskPass(element.password)}<img src="copy.svg" alt="Copy Button" style="display: inline;" width="10px" height="10px" onclick="copyText('${element.password}')" style="cursor: pointer;"
-                    </td>
-                    
-                    <td class="px-6 py-4">
-                        <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline"><button  class="btnsm" onclick ="deletePasswords('${element.website}')">Delete</button></a>
-                    </td>
-                </tr></tbody> `
-
-        //     str += ` <tr>
-        //     <td>${element.website} <img src="copy.svg" alt="Copy Button" width="10px" height="10px" onclick="copyText('${element.website}')" style="cursor: pointer;"/></td>
-        //     <td>${element.username} <img src="copy.svg" alt="Copy Button" width="10px" height="10px" onclick="copyText('${element.username}')" style="cursor: pointer;"/></td>
-        //     <td>${maskPass(element.password)}<img src="copy.svg" alt="Copy Button" width="10px" height="10px" onclick="copyText('${element.password}')" style="cursor: pointer;"/></td>
-        //     <td><button class="btnsm" onclick ="deletePasswords('${element.website}')">Delete</button></td>
-        // </tr>`
-
+    const showNotification = (id, duration = 2000) => {
+        const notification = document.getElementById(id);
+        if (notification) {
+            notification.classList.remove('hidden');
+            setTimeout(() => {
+                notification.classList.add('hidden');
+            }, duration);
         }
-        tb.innerHTML = tb.innerHTML + str;
-    }
-    website.value = '';
-    username.value = '';
-    password.value = '';
-}
-console.log('Working');
-showPasswords();
-document.querySelector(".btn").addEventListener("click", (e) => {
-    e.preventDefault();
-    console.log("clicked");
-    console.log(username.value);
-    console.log(password.value);
-    let passwords = localStorage.getItem("passwords");
-    console.log(passwords);
+    };
 
-    if (passwords == null) {
-        json = [];
-        json.push({ website: website.value, username: username.value, password: password.value });
-        // alert("password saved")
+    const copyText = (text, type = 'entry') => {
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(() => {
+            showNotification('alert-copy');
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
+        });
+    };
 
-        document.getElementById("added").style.display= "inline";
-            setTimeout(()=>{
-                    document.getElementById("added").style.display= "none"
-            },1500)
+    const showPasswords = () => {
+        const passwords = JSON.parse(localStorage.getItem('passwords') || '[]');
+        passwordTableBody.innerHTML = '';
 
-        localStorage.setItem("passwords", JSON.stringify(json));
-    }
-    else {
-        json = JSON.parse(localStorage.getItem("passwords"));
-        json.push({ website: website.value, username: username.value, password: password.value });
-        // alert("password saved")
+        if (passwords.length === 0) {
+            noDataMessage.classList.remove('hidden');
+        } else {
+            noDataMessage.classList.add('hidden');
+            passwords.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = 'bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50';
 
-        document.getElementById("added").style.display= "inline";
-            setTimeout(()=>{
-                    document.getElementById("added").style.display= "none"
-            },1500)
+                const maskedPassword = '*'.repeat(p.password.length);
 
-        localStorage.setItem("passwords", JSON.stringify(json));
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-medium whitespace-nowrap">${p.website}</td>
+                    <td class="px-6 py-4">${p.username}</td>
+                    <td class="px-6 py-4">${maskedPassword}</td>
+                    <td class="px-6 py-4 text-center">
+                        <button class="action-btn copy-btn" data-password="${p.password}">Copy</button>
+                        <button class="action-btn delete-btn" data-website="${p.website}">Delete</button>
+                    </td>
+                `;
+                passwordTableBody.appendChild(tr);
+            });
+        }
+    };
 
-    }
+    passwordTableBody.addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-btn')) {
+            const website = e.target.dataset.website;
+            let passwords = JSON.parse(localStorage.getItem('passwords') || '[]');
+            passwords = passwords.filter(p => p.website !== website);
+            localStorage.setItem('passwords', JSON.stringify(passwords));
+            showPasswords();
+            showNotification('alert-delete');
+        }
+        if (e.target.classList.contains('copy-btn')) {
+            const password = e.target.dataset.password;
+            copyText(password);
+        }
+    });
+
+    passwordForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const website = document.getElementById('website').value;
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        if (website && username && password) {
+            const passwords = JSON.parse(localStorage.getItem('passwords') || '[]');
+            passwords.push({ website, username, password });
+            localStorage.setItem('passwords', JSON.stringify(passwords));
+            showNotification('alert-added');
+            passwordForm.reset();
+            showPasswords();
+        }
+    });
+
+    const generatePassword = (length) => {
+        const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
+        let retVal = "";
+        for (let i = 0, n = charset.length; i < length; ++i) {
+            retVal += charset.charAt(Math.floor(Math.random() * n));
+        }
+        return retVal;
+    };
+
+    generateBtn.addEventListener('click', () => {
+        const length = passwordLengthSlider.value;
+        const newPassword = generatePassword(length);
+        generatedPasswordField.value = newPassword;
+    });
+    
+    copyGeneratedBtn.addEventListener('click', () => {
+        copyText(generatedPasswordField.value, 'generated');
+    });
+
+    passwordLengthSlider.addEventListener('input', (e) => {
+        lengthValueSpan.textContent = e.target.value;
+    });
+
     showPasswords();
-
-})
+});
